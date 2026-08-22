@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: sayam-career-v7-brand-new
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    customDomains:
+      - api.sayamconsulting.com
+    envVars:
+      - key: UPI_ID
+        value: mail2dms-1@okaxis
+      - key: CONTACT_EMAIL
+        value: info@sayamconsulting.com
+      - key: DOMAIN
+        value: sayamconsulting.com
+      - key: API_DOMAIN
+        value: api.sayamconsulting.com
+      - key: PYTHON_VERSION
+        value: 3.11.0
