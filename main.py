@@ -171,3 +171,60 @@ def analyze(req: CounselingRequest):
 @app.delete("/api/user/delete")
 def delete_user(email: str):
     return {"status":"deletion_requested","email":email,"contact":"info@sayamconsulting.com","message":"Data will be deleted in 7 days"}
+import os, razorpay
+
+# Razorpay Client
+RAZORPAY_KEY = os.getenv("RAZORPAY_KEY_ID", "rzp_test_YOUR_KEY")
+RAZORPAY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "YOUR_SECRET")
+client = razorpay.Client(auth=(RAZORPAY_KEY, RAZORPAY_SECRET))
+
+class PaymentOrder(BaseModel):
+    amount: int = 479
+    currency: str = "INR"
+    name: str
+    email: str
+    plan: str = "premium"
+
+@app.post("/api/create-order")
+def create_order(order: PaymentOrder):
+    # Rs 479 * 100 paise
+    data = {
+        "amount": 47900,
+        "currency": "INR",
+        "receipt": f"sayam_{order.email}",
+        "notes": {"plan": "premium", "email": order.email, "upi":"mail2dms-1@okaxis"}
+    }
+    razor_order = client.order.create(data=data)
+    return {
+        "order_id": razor_order["id"],
+        "amount": 47900,
+        "currency": "INR",
+        "key": RAZORPAY_KEY,
+        "upi_id": "mail2dms-1@okaxis",
+        "email": "info@sayamconsulting.com"
+    }
+
+@app.post("/api/verify-payment")
+def verify_payment(razorpay_order_id: str, razorpay_payment_id: str, razorpay_signature: str):
+    # Verify signature
+    try:
+        params = {
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        }
+        client.utility.verify_payment_signature(params)
+        return {"status":"success","payment_id":razorpay_payment_id,"plan":"premium","message":"Payment verified, premium unlocked"}
+    except:
+        return {"status":"failed","message":"Payment verification failed, contact info@sayamconsulting.com"}
+@app.get("/api/payment-info")
+def payment_info():
+    return {
+        "price": 479,
+        "currency": "INR",
+        "upi_id": "mail2dms-1@okaxis",
+        "methods": ["UPI","Card","NetBanking","Wallet"],
+        "gateway": "Razorpay",
+        "contact": "info@sayamconsulting.com",
+        "note": "We store only Razorpay Payment ID, no card/UPI PIN"
+    }
