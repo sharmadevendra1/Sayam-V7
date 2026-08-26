@@ -228,3 +228,21 @@ def payment_info():
         "contact": "info@sayamconsulting.com",
         "note": "We store only Razorpay Payment ID, no card/UPI PIN"
     }
+@app.get("/privacy-policy", response_class=HTMLResponse)
+async def privacy_policy():
+    try:
+        # Try both lowercase and your uploaded capital name
+        for fname in ["privacy-policy.html", "Privacy-Policy.html"]:
+            try:
+                with open(fname, "r", encoding="utf-8") as f:
+                    return HTMLResponse(content=f.read(), status_code=200)
+            except FileNotFoundError:
+                continue
+        return HTMLResponse(content="<h1>Privacy Policy file not found - contact info@sayamconsulting.com</h1>", status_code=404)
+    except Exception as e:
+        return HTMLResponse(content=f"<h1>Error: {str(e)}</h1>", status_code=500)
+
+@app.get("/delete-account", response_class=HTMLResponse)
+async def delete_account_page():
+    # Same page for Google Play Delete Account URL requirement
+    return await privacy_policy()
